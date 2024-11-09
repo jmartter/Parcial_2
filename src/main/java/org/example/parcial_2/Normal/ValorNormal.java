@@ -1,4 +1,4 @@
-package org.example.parcial_2;
+package org.example.parcial_2.Normal;
 
 import jakarta.persistence.*;
 import lombok.Data;
