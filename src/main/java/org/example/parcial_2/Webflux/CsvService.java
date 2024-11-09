@@ -1,4 +1,4 @@
-package org.example.parcial_2;
+package org.example.parcial_2.Webflux;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
@@ -30,7 +30,6 @@ public class CsvService {
                     ValorNormal valorNormal = new ValorNormal();
                     valorNormal.setValor(valor);
                     valorNormalRepository.save(valorNormal);
-                    logger.info("Saved valor: {}", valorNormal.getValor());
                     sink.next(valorNormal);
                 }
                 sink.complete();

@@ -1,4 +1,4 @@
-package org.example.parcial_2;
+package org.example.parcial_2.Webflux;
 
 import org.example.parcial_2.Normal.ValorNormal;
 import org.springframework.beans.factory.annotation.Autowired;
