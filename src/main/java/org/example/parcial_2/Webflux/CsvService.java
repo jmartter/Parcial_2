@@ -23,16 +23,23 @@ public class CsvService {
 
     public Flux<ValorNormal> loadCsvData() {
         return Flux.create(sink -> {
-            try (CSVReader reader = new CSVReader(new FileReader("src/main/resources/valores_normales.csv"))) {
-                String[] line;
-                while ((line = reader.readNext()) != null) {
-                    double valor = Double.parseDouble(line[0]);
-                    ValorNormal valorNormal = new ValorNormal();
-                    valorNormal.setValor(valor);
-                    valorNormalRepository.save(valorNormal);
-                    sink.next(valorNormal);
+            try {
+                // Truncate the table before loading new data
+                valorNormalRepository.truncateTable();
+                logger.info("Table truncated successfully");
+
+                try (CSVReader reader = new CSVReader(new FileReader("src/main/resources/valores_normales.csv"))) {
+                    String[] line;
+                    while ((line = reader.readNext()) != null) {
+                        double valor = Double.parseDouble(line[0]);
+                        ValorNormal valorNormal = new ValorNormal();
+                        valorNormal.setValor(valor);
+                        valorNormalRepository.save(valorNormal);
+                        logger.info("Saved ValorNormal: {}", valorNormal);
+                        sink.next(valorNormal);
+                    }
+                    sink.complete();
                 }
-                sink.complete();
             } catch (IOException | CsvValidationException | NumberFormatException e) {
                 logger.error("Error processing CSV file", e);
                 sink.error(e);
