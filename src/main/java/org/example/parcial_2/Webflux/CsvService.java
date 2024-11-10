@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.Duration;
 
 @Service
 public class CsvService {
@@ -26,28 +27,40 @@ public class CsvService {
     private RabbitTemplate rabbitTemplate;
 
     public Flux<ValorNormal> publishCsvData() {
-        return Flux.create(sink -> {
-            try {
-                // Truncate the table before loading new data
-                valorNormalRepository.truncateTable();
-                logger.info("Table truncated successfully");
+        return Flux.<ValorNormal>create(sink -> {
+                    try {
+                        // Truncate the table before loading new data
+                        valorNormalRepository.truncateTable();
+                        logger.info("Table truncated successfully");
 
-                try (CSVReader reader = new CSVReader(new FileReader("src/main/resources/valores_normales.csv"))) {
-                    String[] line;
-                    while ((line = reader.readNext()) != null) {
-                        double valor = Double.parseDouble(line[0]);
-                        ValorNormal valorNormal = new ValorNormal();
-                        valorNormal.setValor(valor);
-                        valorNormalRepository.save(valorNormal);
-                        sink.next(valorNormal);
-                        rabbitTemplate.convertAndSend("csvQueue", "Loaded ValorNormal: " + valorNormal);
+                        try (CSVReader reader = new CSVReader(new FileReader("src/main/resources/valores_normales.csv"))) {
+                            String[] line;
+                            while ((line = reader.readNext()) != null) {
+                                double valor = Double.parseDouble(line[0]);
+                                ValorNormal valorNormal = new ValorNormal();
+                                valorNormal.setValor(valor);
+                                valorNormalRepository.save(valorNormal);
+                                rabbitTemplate.convertAndSend("csvQueue", "Loaded ValorNormal: " + valorNormal);
+
+                                // Publish each value to the Flux
+                                sink.next(valorNormal);
+
+                                // Introducing a delay of 1/4 second (non-blocking)
+                                try {
+                                    Thread.sleep(250); // 1/4 second delay between each value
+                                } catch (InterruptedException e) {
+                                    logger.error("Thread interrupted during sleep", e);
+                                    Thread.currentThread().interrupt();
+                                }
+                            }
+                            sink.complete();
+                        }
+                    } catch (IOException | CsvValidationException | NumberFormatException e) {
+                        logger.error("Error processing CSV file", e);
+                        sink.error(e);
                     }
-                    sink.complete();
-                }
-            } catch (IOException | CsvValidationException | NumberFormatException e) {
-                logger.error("Error processing CSV file", e);
-                sink.error(e);
-            }
-        });
+                })
+                // Optionally use delayElements here if needed, to apply delay non-blocking (comment out if using Thread.sleep)
+                .delayElements(Duration.ofMillis(250)); // Non-blocking 1/4 second delay between each element in the Flux
     }
 }
