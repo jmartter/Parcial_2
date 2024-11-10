@@ -19,8 +19,8 @@
         }
 
         #notifications-container {
-            width: 36%; /* 1/3 of the viewport width */
-            height: 40%; /* 1/3 of the viewport height */
+            width: 38%; /* 1/3 of the viewport width */
+            height: 8%; /* 1/3 of the viewport height */
             overflow-y: auto; /* Enable vertical scrolling */
             border: 1px solid #ccc; /* Optional: Add a border for better visibility */
             padding: 10px; /* Optional: Add some padding */
@@ -49,6 +49,8 @@
         <h1>RabbitMQ Notifications</h1>
     </div>
     <div id="notifications-container"></div>
+    <button onclick="pauseCsv()">Pause</button>
+    <button onclick="resumeCsv()">Resume</button>
     <svg width="800" height="1500"></svg> <!-- Increase the height of the SVG to match the page height -->
 
     <script>
@@ -70,6 +72,28 @@
                     localStorage.setItem('notifications', JSON.stringify(data));
                 })
                 .catch(error => console.error('Error fetching notifications:', error));
+        }
+
+        function pauseCsv() {
+            fetch('/pause-csv', { method: 'POST' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    console.log('CSV flow paused');
+                })
+                .catch(error => console.error('Error pausing CSV flow:', error));
+        }
+
+        function resumeCsv() {
+            fetch('/resume-csv', { method: 'POST' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    console.log('CSV flow resumed');
+                })
+                .catch(error => console.error('Error resuming CSV flow:', error));
         }
 
         // Fetch notifications every 0.5 seconds

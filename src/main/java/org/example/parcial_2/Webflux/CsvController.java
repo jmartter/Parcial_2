@@ -3,6 +3,7 @@ package org.example.parcial_2.Webflux;
 import org.example.parcial_2.Normal.ValorNormal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
@@ -15,5 +16,15 @@ public class CsvController {
     @GetMapping("/load-csv")
     public Flux<ValorNormal> loadCsv() {
         return csvService.publishCsvData();
+    }
+
+    @PostMapping("/pause-csv")
+    public void pauseCsv() {
+        csvService.pause();
+    }
+
+    @PostMapping("/resume-csv")
+    public void resumeCsv() {
+        csvService.resume();
     }
 }

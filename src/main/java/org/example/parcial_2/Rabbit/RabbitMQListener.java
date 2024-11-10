@@ -19,7 +19,6 @@ public class RabbitMQListener {
     public void subscribeToCsvQueue(String message) {
         if ("CSV loading completed".equals(message)) {
             logger.info("CSV loading completed");
-            // Additional logic for completion can be added here
         } else {
             logger.info("Received message from RabbitMQ: {}", message);
         }
