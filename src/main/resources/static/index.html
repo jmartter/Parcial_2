@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RabbitMQ Notifications</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
             align-items: center;
-            height: 100vh;
             margin: 0;
+            height: 600vh; /* Increase the height to allow scrolling */
         }
 
         #title-container {
@@ -26,6 +26,10 @@
             padding: 10px; /* Optional: Add some padding */
             box-sizing: border-box; /* Ensure padding is included in the height */
         }
+
+        .pin { fill: steelblue; }
+        .ball { fill: red; }
+        .container { fill: lightgray; }
     </style>
 </head>
 <body>
@@ -33,6 +37,7 @@
         <h1>RabbitMQ Notifications</h1>
     </div>
     <div id="notifications-container"></div>
+    <svg width="800" height="1500"></svg> <!-- Increase the height of the SVG to match the page height -->
 
     <script>
         function fetchNotifications() {
@@ -45,14 +50,136 @@
                         const div = document.createElement('div');
                         div.textContent = notification;
                         container.appendChild(div);
+                        dropBall(notification);
                     });
                     container.scrollTop = container.scrollHeight; // Scroll to the bottom
+
+                    // Store notifications in localStorage
+                    localStorage.setItem('notifications', JSON.stringify(data));
                 })
                 .catch(error => console.error('Error fetching notifications:', error));
         }
 
         // Fetch notifications every 0.5 seconds
-        setInterval(fetchNotifications, 50);
+        setInterval(fetchNotifications, 500);
+
+        const width = 800;
+        const height = 1500;
+        const numRows = 30;
+        const pinRadius = 2.5;
+        const ballRadius = 1.5;
+        const containerHeight = 950;
+        const containerWidth = 5;
+        const gravity = 0.98;
+        const bounce = 0.6;
+        const friction = 0.01;
+
+        const svg = d3.select("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+        const pins = [];
+        for (let row = 0; row < numRows; row++) {
+            for (let col = 0; col <= row; col++) {
+                pins.push({
+                    x: width / 2 + (col - row / 2) * 10,
+                    y: row * 10 + 25
+                });
+            }
+        }
+
+        svg.selectAll(".pin")
+                .data(pins)
+                .enter()
+                .append("circle")
+                .attr("class", "pin")
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .attr("r", pinRadius);
+
+        const containers = [];
+        for (let i = 0; i <= numRows; i++) {
+            containers.push({
+                x: width / 2 + (i - numRows / 2) * 10,
+                y: height - containerHeight / 2,
+                count: 0
+            });
+        }
+
+        svg.selectAll(".container")
+                .data(containers)
+                .enter()
+                .append("rect")
+                .attr("class", "container")
+                .attr("x", d => d.x - containerWidth / 2)
+                .attr("y", d => d.y - containerHeight / 2)
+                .attr("width", containerWidth)
+                .attr("height", containerHeight);
+
+        const ballData = [];
+        const allBallData = [];
+        const uniqueValues = new Set();
+
+        function dropBall(value) {
+            if (uniqueValues.has(value)) {
+                console.log(`Value ${value} already exists. Skipping ball.`);
+                return;
+            }
+
+            uniqueValues.add(value);
+
+            let x = width / 2;
+            let y = 0;
+            let vy = 0;
+            let vx = (Math.random() - 0.5) * 1;
+            const ball = svg.append("circle")
+                    .attr("class", "ball")
+                    .attr("cx", x)
+                    .attr("cy", y)
+                    .attr("r", ballRadius)
+                    .attr("data-value", value);
+
+            ballData.push({ value });
+            allBallData.push({ value });
+            if (ballData.length > 10) ballData.shift();
+
+            function updateBall() {
+                vy += gravity;
+                y += vy;
+                x += vx;
+
+                for (let pin of pins) {
+                    const dx = x - pin.x;
+                    const dy = y - pin.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < pinRadius + ballRadius) {
+                        const angle = Math.atan2(dy, dx);
+                        vx = Math.cos(angle) * bounce;
+                        vy = Math.sin(angle) * bounce;
+                        vx += (Math.random() < 0.5 ? -1 : 1) * 0.5;
+                        break;
+                    }
+                }
+
+                vx *= (1 - friction);
+
+                ball.attr("cx", x).attr("cy", y);
+
+                if (y < height - containerHeight) {
+                    requestAnimationFrame(updateBall);
+                } else {
+                    const containerIndex = Math.floor((x - width / 2) / 10 + numRows / 2);
+                    const container = containers[Math.max(0, Math.min(containerIndex, containers.length - 1))];
+                    container.count += 1;
+                    ball.transition()
+                            .duration(500)
+                            .attr("cx", container.x)
+                            .attr("cy", height - container.count * 2 * ballRadius - ballRadius);
+                }
+            }
+
+            updateBall();
+        }
     </script>
 </body>
 </html>
