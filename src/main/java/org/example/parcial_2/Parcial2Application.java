@@ -22,7 +22,7 @@ public class Parcial2Application {
     @Bean
     public CommandLineRunner run() {
         return args -> {
-            csvService.loadCsvData().subscribe();
+            csvService.publishCsvData().subscribe();
         };
     }
 }

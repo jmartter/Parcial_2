@@ -14,6 +14,6 @@ public class CsvController {
 
     @GetMapping("/load-csv")
     public Flux<ValorNormal> loadCsv() {
-        return csvService.loadCsvData();
+        return csvService.publishCsvData();
     }
 }

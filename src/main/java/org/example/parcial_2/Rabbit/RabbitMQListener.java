@@ -11,7 +11,7 @@ public class RabbitMQListener {
     private static final Logger logger = LoggerFactory.getLogger(RabbitMQListener.class);
 
     @RabbitListener(queues = "csvQueue")
-    public void listen(String message) {
+    public void subscribeToCsvQueue(String message) {
         logger.info("Received message from RabbitMQ: {}", message);
     }
 }

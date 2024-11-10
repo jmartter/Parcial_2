@@ -25,7 +25,7 @@ public class CsvService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    public Flux<ValorNormal> loadCsvData() {
+    public Flux<ValorNormal> publishCsvData() {
         return Flux.create(sink -> {
             try {
                 // Truncate the table before loading new data
