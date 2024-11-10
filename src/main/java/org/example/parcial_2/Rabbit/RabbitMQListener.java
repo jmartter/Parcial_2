@@ -17,7 +17,12 @@ public class RabbitMQListener {
 
     @RabbitListener(queues = "csvQueue")
     public void subscribeToCsvQueue(String message) {
-        logger.info("Received message from RabbitMQ: {}", message);
+        if ("CSV loading completed".equals(message)) {
+            logger.info("CSV loading completed");
+            // Additional logic for completion can be added here
+        } else {
+            logger.info("Received message from RabbitMQ: {}", message);
+        }
         restTemplate.postForObject("http://localhost:8080/notify", message, String.class);
     }
 }

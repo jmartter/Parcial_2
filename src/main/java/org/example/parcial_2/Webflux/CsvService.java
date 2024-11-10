@@ -25,36 +25,38 @@ public class CsvService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    public Flux<ValorNormal> publishCsvData() {
-        return Flux.<ValorNormal>create(sink -> {
-                    try {
-                        // Truncate the table before loading new data
-                        valorNormalRepository.truncateTable();
-                        logger.info("Table truncated successfully");
+public Flux<ValorNormal> publishCsvData() {
+    return Flux.<ValorNormal>create(sink -> {
+                try {
+                    // Truncate the table before loading new data
+                    valorNormalRepository.truncateTable();
+                    logger.info("Table truncated successfully");
 
-                        try (CSVReader reader = new CSVReader(new FileReader("src/main/resources/valores_normales.csv"))) {
-                            String[] line;
-                            while ((line = reader.readNext()) != null) {
-                                double valor = Double.parseDouble(line[0]);
-                                ValorNormal valorNormal = new ValorNormal();
-                                valorNormal.setValor(valor);
-                                valorNormalRepository.save(valorNormal);
-                                rabbitTemplate.convertAndSend("csvQueue", "Loaded ValorNormal: " + valorNormal);
-                                sink.next(valorNormal);
-                                try {
-                                    Thread.sleep(30);
-                                } catch (InterruptedException e) {
-                                    logger.error("Thread interrupted during sleep", e);
-                                    Thread.currentThread().interrupt();
-                                }
+                    try (CSVReader reader = new CSVReader(new FileReader("src/main/resources/valores_normales.csv"))) {
+                        String[] line;
+                        while ((line = reader.readNext()) != null) {
+                            double valor = Double.parseDouble(line[0]);
+                            ValorNormal valorNormal = new ValorNormal();
+                            valorNormal.setValor(valor);
+                            valorNormalRepository.save(valorNormal);
+                            rabbitTemplate.convertAndSend("csvQueue", "Loaded ValorNormal: " + valorNormal);
+                            sink.next(valorNormal);
+                            try {
+                                Thread.sleep(30);
+                            } catch (InterruptedException e) {
+                                logger.error("Thread interrupted during sleep", e);
+                                Thread.currentThread().interrupt();
                             }
-                            sink.complete();
                         }
-                    } catch (IOException | CsvValidationException | NumberFormatException e) {
-                        logger.error("Error processing CSV file", e);
-                        sink.error(e);
+                        // Send completion message
+                        rabbitTemplate.convertAndSend("csvQueue", "CSV loading completed");
+                        sink.complete();
                     }
-                })
-                .delayElements(Duration.ofMillis(30));
-    }
+                } catch (IOException | CsvValidationException | NumberFormatException e) {
+                    logger.error("Error processing CSV file", e);
+                    sink.error(e);
+                }
+            })
+            .delayElements(Duration.ofMillis(30));
+}
 }
