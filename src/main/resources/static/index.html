@@ -30,6 +30,18 @@
         .pin { fill: steelblue; }
         .ball { fill: red; }
         .container { fill: lightgray; }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: 80px;
+            height: 28px;
+            padding: 2px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -61,7 +73,7 @@
         }
 
         // Fetch notifications every 0.5 seconds
-        setInterval(fetchNotifications, 500);
+        setInterval(fetchNotifications, 20);
 
         const width = 800;
         const height = 1500;
@@ -120,6 +132,10 @@
         const allBallData = [];
         const uniqueValues = new Set();
 
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
         function dropBall(value) {
             if (uniqueValues.has(value)) {
                 console.log(`Value ${value} already exists. Skipping ball.`);
@@ -137,7 +153,20 @@
                     .attr("cx", x)
                     .attr("cy", y)
                     .attr("r", ballRadius)
-                    .attr("data-value", value);
+                    .attr("data-value", value)
+                    .on("mouseover", function(event, d) {
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        tooltip.html("Value: " + value)
+                            .style("left", (event.pageX + 5) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function(d) {
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
 
             ballData.push({ value });
             allBallData.push({ value });
