@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.Duration;
@@ -41,11 +40,7 @@ public class CsvService {
                                 valorNormal.setValor(valor);
                                 valorNormalRepository.save(valorNormal);
                                 rabbitTemplate.convertAndSend("csvQueue", "Loaded ValorNormal: " + valorNormal);
-
-                                // Publish each value to the Flux
                                 sink.next(valorNormal);
-
-                                // Introducing a delay of 1/4 second (non-blocking)
                                 try {
                                     Thread.sleep(250); // 1/4 second delay between each value
                                 } catch (InterruptedException e) {
@@ -60,7 +55,6 @@ public class CsvService {
                         sink.error(e);
                     }
                 })
-                // Optionally use delayElements here if needed, to apply delay non-blocking (comment out if using Thread.sleep)
-                .delayElements(Duration.ofMillis(250)); // Non-blocking 1/4 second delay between each element in the Flux
+                .delayElements(Duration.ofMillis(250));
     }
 }
