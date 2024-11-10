@@ -4,6 +4,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import org.example.parcial_2.Normal.ValorNormal;
 import org.example.parcial_2.Normal.ValorNormalRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -21,6 +22,9 @@ public class CsvService {
     @Autowired
     private ValorNormalRepository valorNormalRepository;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     public Flux<ValorNormal> loadCsvData() {
         return Flux.create(sink -> {
             try {
@@ -35,8 +39,8 @@ public class CsvService {
                         ValorNormal valorNormal = new ValorNormal();
                         valorNormal.setValor(valor);
                         valorNormalRepository.save(valorNormal);
-                        logger.info("Saved ValorNormal: {}", valorNormal);
                         sink.next(valorNormal);
+                        rabbitTemplate.convertAndSend("csvQueue", "Loaded ValorNormal: " + valorNormal);
                     }
                     sink.complete();
                 }
