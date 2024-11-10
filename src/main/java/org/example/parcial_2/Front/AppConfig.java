@@ -1,4 +1,4 @@
-package org.example.parcial_2;
+package org.example.parcial_2.Front;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

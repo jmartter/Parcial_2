@@ -42,7 +42,7 @@ public class CsvService {
                                 rabbitTemplate.convertAndSend("csvQueue", "Loaded ValorNormal: " + valorNormal);
                                 sink.next(valorNormal);
                                 try {
-                                    Thread.sleep(250); // 1/4 second delay between each value
+                                    Thread.sleep(30);
                                 } catch (InterruptedException e) {
                                     logger.error("Thread interrupted during sleep", e);
                                     Thread.currentThread().interrupt();
@@ -55,6 +55,6 @@ public class CsvService {
                         sink.error(e);
                     }
                 })
-                .delayElements(Duration.ofMillis(250));
+                .delayElements(Duration.ofMillis(30));
     }
 }
