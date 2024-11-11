@@ -26,7 +26,7 @@ public class CsvService {
 
     private volatile boolean isPaused = false;
 
-    public Flux<ValorNormal> publishCsvData() {
+    public Flux<ValorNormal> publishCsvData(int batchSize) {
         return Flux.<ValorNormal>create(sink -> {
             try {
                 valorNormalRepository.truncateTable();
@@ -34,6 +34,7 @@ public class CsvService {
 
                 try (CSVReader reader = new CSVReader(new FileReader("src/main/resources/valores_normales.csv"))) {
                     String[] line;
+                    int count = 0;
                     while ((line = reader.readNext()) != null) {
                         while (isPaused) {
                             Thread.sleep(100); // Esperar hasta que se reanude
@@ -44,10 +45,16 @@ public class CsvService {
                         valorNormalRepository.save(valorNormal);
                         rabbitTemplate.convertAndSend("csvQueue", "Loaded ValorNormal: " + valorNormal);
                         sink.next(valorNormal);
+                        count++;
+                        if (count >= batchSize) {
+                            break;
+                        }
                         Thread.sleep(30);
                     }
-                    rabbitTemplate.convertAndSend("csvQueue", "CSV loading completed");
-                    sink.complete();
+                    if (line == null) {
+                        rabbitTemplate.convertAndSend("csvQueue", "CSV loading completed");
+                        sink.complete();
+                    }
                 }
             } catch (IOException | CsvValidationException | InterruptedException e) {
                 logger.error("Error processing CSV file", e);

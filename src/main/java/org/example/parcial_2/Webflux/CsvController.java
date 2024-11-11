@@ -4,6 +4,7 @@ import org.example.parcial_2.Normal.ValorNormal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
@@ -14,8 +15,8 @@ public class CsvController {
     private CsvService csvService;
 
     @GetMapping("/load-csv")
-    public Flux<ValorNormal> loadCsv() {
-        return csvService.publishCsvData();
+    public Flux<ValorNormal> loadCsv(@RequestParam int batchSize) {
+        return csvService.publishCsvData(batchSize);
     }
 
     @PostMapping("/pause-csv")
