@@ -7,41 +7,68 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            height: 200vh; /* Increase the height to allow scrolling */
-        }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    height: 230vh; /* Increase the height to allow scrolling */
+    font-family: 'Arial', sans-serif;
+    background: #8c8c8c;
+    color: #171717;
+}
 
-        #title-container {
-            margin-bottom: 10px; /* Space between title and container */
-        }
+#title-container {
+    margin-bottom: 20px; /* Space between title and container */
+    text-align: center;
+}
 
-        #notifications-container {
-            width: 38%; /* 1/3 of the viewport width */
-            height: 20%; /* 1/3 of the viewport height */
-            overflow-y: auto; /* Enable vertical scrolling */
-            border: 1px solid #ccc; /* Optional: Add a border for better visibility */
-            padding: 10px; /* Optional: Add some padding */
-            box-sizing: border-box; /* Ensure padding is included in the height */
-        }
+#notifications-container {
+    width: 40%; /* 40% of the viewport width */
+    height: 25%; /* 30% of the viewport height */
+    overflow-y: auto; /* Enable vertical scrolling */
+    border: 1px solid #ccc; /* Optional: Add a border for better visibility */
+    padding: 15px; /* Optional: Add some padding */
+    box-sizing: border-box; /* Ensure padding is included in the height */
+    background: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
 
-        .pin { fill: steelblue; }
-        .ball { fill: red; }
-        .container { fill: lightgray; }
-        .tooltip {
-            position: absolute;
-            text-align: center;
-            width: 80px;
-            height: 28px;
-            padding: 2px;
-            font: 12px sans-serif;
-            background: lightsteelblue;
-            border: 0px;
-            border-radius: 8px;
-            pointer-events: none;
-        }
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+        .pin { fill: #007bff; }
+.ball { fill: red; }
+.container { fill: lightgray; }
+.tooltip {
+    position: absolute;
+    text-align: center;
+    width: 10vw; /* 10% of the viewport width */
+    height: 5vh; /* 5% of the viewport height */
+    padding: 0.5vw; /* Padding relative to viewport width */
+    font: 1.5vw sans-serif; /* Font size relative to viewport width */
+    background: lightsteelblue;
+    border: 0px;
+    border-radius: 1vw; /* Border radius relative to viewport width */
+    pointer-events: none;
+}
     </style>
 </head>
 <body>
