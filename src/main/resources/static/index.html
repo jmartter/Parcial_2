@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RabbitMQ Notifications</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            height: 230vh; /* Aumenta la altura para permitir el desplazamiento */
+            font-family: 'Arial', sans-serif;
+            background: #ffffff;
+            color: #171717;
+        }
+
+        #title-container {
+            margin-bottom: 20px; /* Espacio entre el título y el contenedor */
+            text-align: center;
+        }
+
+        #notifications-container {
+            width: 40%; /* 40% del ancho de la ventana gráfica */
+            height: 25%; /* 25% de la altura de la ventana gráfica */
+            overflow-y: auto; /* Habilitar el desplazamiento vertical */
+            border: 1px solid #ccc; /* Opcional: Añadir un borde para mejor visibilidad */
+            padding: 15px; /* Opcional: Añadir algo de relleno */
+            box-sizing: border-box; /* Asegurar que el relleno esté incluido en la altura */
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .pin { fill: #007bff; }
+        .ball { fill: red; }
+        .container { fill: lightgray; }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: 10vw; /* 10% del ancho de la ventana gráfica */
+            height: 5vh; /* 5% de la altura de la ventana gráfica */
+            padding: 0.5vw; /* Relleno relativo al ancho de la ventana gráfica */
+            font: 1.5vw sans-serif; /* Tamaño de fuente relativo al ancho de la ventana gráfica */
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 1vw; /* Radio del borde relativo al ancho de la ventana gráfica */
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="title-container">
+        <h1>RabbitMQ Notifications</h1>
+    </div>
+    <div id="notifications-container"></div>
+    <button onclick="pauseCsv()">Pause</button>
+    <button onclick="resumeCsv()">Resume</button>
+    <svg width="800" height="1500"></svg> <!-- Aumenta la altura del SVG para que coincida con la altura de la página -->
+
+    <script>
+        // Función para obtener notificaciones
+        function fetchNotifications() {
+            fetch('/notifications')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('notifications-container');
+                    container.innerHTML = ''; // Limpiar notificaciones anteriores
+                    data.forEach(notification => {
+                        const div = document.createElement('div');
+                        div.textContent = notification;
+                        container.appendChild(div);
+                        dropBall(notification);
+                    });
+                    container.scrollTop = container.scrollHeight; // Desplazarse hasta el fondo
+
+                    // Almacenar notificaciones en localStorage
+                    localStorage.setItem('notifications', JSON.stringify(data));
+                })
+                .catch(error => console.error('Error fetching notifications:', error));
+        }
+
+        // Función para pausar el flujo CSV
+        function pauseCsv() {
+            fetch('/pause-csv', { method: 'POST' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    console.log('CSV flow paused');
+                })
+                .catch(error => console.error('Error pausing CSV flow:', error));
+        }
+
+        // Función para reanudar el flujo CSV
+        function resumeCsv() {
+            fetch('/resume-csv', { method: 'POST' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    console.log('CSV flow resumed');
+                })
+                .catch(error => console.error('Error resuming CSV flow:', error));
+        }
+
+        // Obtener notificaciones cada 0.5 segundos
+        setInterval(fetchNotifications, 20);
+
+        const width = 800;
+        const height = 700;
+        const numRows = 30;
+        const pinRadius = 2.5;
+        const ballRadius = 1.5;
+        const containerHeight = 350;
+        const containerWidth = 5;
+        const gravity = 0.98;
+        const bounce = 0.6;
+        const friction = 0.01;
+
+        const svg = d3.select("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+        const pins = [];
+        for (let row = 0; row < numRows; row++) {
+            for (let col = 0; col <= row; col++) {
+                pins.push({
+                    x: width / 2 + (col - row / 2) * 10,
+                    y: row * 10 + 25
+                });
+            }
+        }
+
+        svg.selectAll(".pin")
+                .data(pins)
+                .enter()
+                .append("circle")
+                .attr("class", "pin")
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .attr("r", pinRadius);
+
+        const containers = [];
+        for (let i = 0; i <= numRows; i++) {
+            containers.push({
+                x: width / 2 + (i - numRows / 2) * 10,
+                y: height - containerHeight / 2,
+                count: 0
+            });
+        }
+
+        svg.selectAll(".container")
+                .data(containers)
+                .enter()
+                .append("rect")
+                .attr("class", "container")
+                .attr("x", d => d.x - containerWidth / 2)
+                .attr("y", d => d.y - containerHeight / 2)
+                .attr("width", containerWidth)
+                .attr("height", containerHeight);
+
+        const ballData = [];
+        const allBallData = [];
+        const uniqueValues = new Set();
+
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        // Función para soltar una bola
+        function dropBall(value) {
+            if (uniqueValues.has(value)) {
+                console.log(`Value ${value} already exists. Skipping ball.`);
+                return;
+            }
+
+            uniqueValues.add(value);
+
+            let x = width / 2;
+            let y = 0;
+            let vy = 0;
+            let vx = (Math.random() - 0.5) * 1;
+            const ball = svg.append("circle")
+                    .attr("class", "ball")
+                    .attr("cx", x)
+                    .attr("cy", y)
+                    .attr("r", ballRadius)
+                    .attr("data-value", value)
+                    .on("mouseover", function(event, d) {
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        tooltip.html("Value: " + value)
+                            .style("left", (event.pageX + 5) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function(d) {
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
+
+            ballData.push({ value });
+            allBallData.push({ value });
+            if (ballData.length > 10) ballData.shift();
+
+            function updateBall() {
+                vy += gravity;
+                y += vy;
+                x += vx;
+
+                for (let pin of pins) {
+                    const dx = x - pin.x;
+                    const dy = y - pin.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < pinRadius + ballRadius) {
+                        const angle = Math.atan2(dy, dx);
+                        vx = Math.cos(angle) * bounce;
+                        vy = Math.sin(angle) * bounce;
+                        vx += (Math.random() < 0.5 ? -1 : 1) * 0.5;
+                        break;
+                    }
+                }
+
+                vx *= (1 - friction);
+
+                ball.attr("cx", x).attr("cy", y);
+
+                if (y < height - containerHeight) {
+                    requestAnimationFrame(updateBall);
+                } else {
+                    const containerIndex = Math.floor((x - width / 2) / 10 + numRows / 2);
+                    const container = containers[Math.max(0, Math.min(containerIndex, containers.length - 1))];
+                    container.count += 1;
+                    ball.transition()
+                            .duration(500)
+                            .attr("cx", container.x)
+                            .attr("cy", height - container.count * 2 * ballRadius - ballRadius);
+                }
+            }
+
+            updateBall();
+        }
+    </script>
+</body>
+</html>
