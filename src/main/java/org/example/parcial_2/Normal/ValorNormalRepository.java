@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface ValorNormalRepository extends JpaRepository<ValorNormal, Long> {
 
+    // Método para truncar la tabla "valor_normal"
     @Modifying
     @Transactional
     @Query(value = "TRUNCATE TABLE valor_normal", nativeQuery = true)

@@ -15,6 +15,7 @@ public class RabbitMQListener {
     @Autowired
     private RestTemplate restTemplate;
 
+    // Método que escucha mensajes de la cola "csvQueue"
     @RabbitListener(queues = "csvQueue")
     public void subscribeToCsvQueue(String message) {
         if ("CSV loading completed".equals(message)) {
@@ -22,6 +23,7 @@ public class RabbitMQListener {
         } else {
             logger.info("Received message from RabbitMQ: {}", message);
         }
+        // Enviar el mensaje recibido a un endpoint HTTP
         restTemplate.postForObject("http://localhost:8080/notify", message, String.class);
     }
 }

@@ -13,11 +13,13 @@ public class NotificationController {
 
     private List<String> notifications = new ArrayList<>();
 
+    // Método para recibir notificaciones y agregarlas a la lista
     @PostMapping("/notify")
     public void receiveNotification(@RequestBody String message) {
         notifications.add(message);
     }
 
+    // Método para obtener la lista de notificaciones
     @GetMapping("/notifications")
     public List<String> getNotifications() {
         return notifications;

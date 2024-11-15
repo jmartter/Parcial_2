@@ -15,10 +15,12 @@ public class Parcial2Application {
     @Autowired
     private CsvService csvService;
 
+    // Método principal que inicia la aplicación Spring Boot
     public static void main(String[] args) {
         SpringApplication.run(Parcial2Application.class, args);
     }
 
+    // Bean que se ejecuta al iniciar la aplicación y publica los datos del CSV
     @Bean
     public CommandLineRunner run() {
         return args -> {
